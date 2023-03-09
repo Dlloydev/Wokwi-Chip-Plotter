@@ -4,11 +4,13 @@
 
 Debug Analog or Digital Signals.
 
-- Plotter Timebase range is 50-10000 µs. This is the sample period. Width of plot is 255 samples.
+- Plotter Timebase range is 50-10000 µs (default 1000 µs). This is the sample period.
+-  Width of plot is 255 samples.
+- Auto Trigger ON/OFF control (default 1, ON)
 
 
 
-![image](https://user-images.githubusercontent.com/63488701/224104570-3a8807fc-cad9-4284-b81d-777da68ef652.png)
+![image](https://user-images.githubusercontent.com/63488701/224138800-74a2f6d3-1c6b-4c27-85c0-85e226733559.png)
 
 
 
@@ -26,7 +28,7 @@ To use this chip in your project, include it as a dependency in your `diagram.js
 
 ```json
   "dependencies": {
-    "chip-analog-bargraph": "github:Dlloydev/Wokwi-Chip-Plotter@1.0.2"
+    "chip-analog-bargraph": "github:Dlloydev/Wokwi-Chip-Plotter@1.0.3"
   }
 ```
 

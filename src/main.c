@@ -149,6 +149,7 @@ typedef struct {
 typedef struct {
   pin_t pin_IN;
   uint32_t timebase_attr;
+  uint32_t trigger_attr;
   buffer_t framebuffer;
   uint32_t fb_w;
   uint32_t fb_h;
@@ -181,6 +182,7 @@ void chip_init(void) {
   chip_state_t *chip = malloc(sizeof(chip_state_t));
   chip->pin_IN = pin_init("IN", ANALOG);
   chip->timebase_attr = attr_init("timebase", 1000);
+  chip->trigger_attr = attr_init("trigger", 1);
 
   chip->white = (rgba_t) {
     .r = 0xff, .g = 0xff, .b = 0xff, .a = 0xff
@@ -229,9 +231,12 @@ void chip_timer_event(void *user_data) {
   if (chip->serial_val < chip->serial_min) chip->serial_min = chip->serial_val;
   if (chip->serial_val > chip->serial_max) chip->serial_max = chip->serial_val;
 
-  if (chip->plot_x < chip->fb_w - 1) draw_plot(chip);
-  if ((chip->plot_x == chip->fb_w - 1) && (chip->serial_val > chip->serial_last_val)) draw_plot(chip);
-  chip->serial_last_val = chip->serial_val;
+  if (attr_read(chip->trigger_attr)) {
+    if (chip->plot_x < chip->fb_w - 1) draw_plot(chip);
+    if ((chip->plot_x == chip->fb_w - 1) && (chip->serial_val > chip->serial_last_val)) draw_plot(chip);
+    chip->serial_last_val = chip->serial_val;
+  }
+  else  draw_plot(chip);
 
   if (chip->timer_count == 0) draw_string(chip);
   chip->timer_count++;

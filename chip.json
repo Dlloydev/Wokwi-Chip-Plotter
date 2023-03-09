@@ -19,6 +19,14 @@
       "min": 50,
       "max": 10000,
       "step": 50
+    },
+    {
+      "id": "trigger",
+      "label": "Auto Trigger",
+      "type": "range",
+      "min": 0,
+      "max": 1,
+      "step": 1
     }
   ]
 }

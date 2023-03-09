@@ -1,0 +1,24 @@
+{
+  "name": "Plotter",
+  "author": "David Lloyd",
+  "pins": [
+    "",
+    "IN",
+    "",
+    ""
+  ],
+  "display": {
+    "width": 256,
+    "height": 58
+  },
+  "controls": [
+    {
+      "id": "timebase",
+      "label": "Timebase",
+      "type": "range",
+      "min": 50,
+      "max": 10000,
+      "step": 50
+    }
+  ]
+}

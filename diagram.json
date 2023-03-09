@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "author": "David Lloyd",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "chip-plotter", "id": "chip-plotter1", "top": -585.6, "left": 57.6, "attrs": {} },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": -589,
+      "left": -76.8,
+      "attrs": { "color": "green", "label": "Try me!" }
+    },
+    {
+      "type": "wokwi-photoresistor-sensor",
+      "id": "ldr1",
+      "top": -505.6,
+      "left": -181.6,
+      "attrs": {}
+    },
+    { "type": "wokwi-gnd", "id": "gnd1", "top": -441.6, "left": -0.6, "attrs": {} }
+  ],
+  "connections": [
+    [ "ldr1:VCC", "btn1:1.l", "red", [ "h19.2", "v-28.8", "h-115.2", "v-57.6" ] ],
+    [ "ldr1:GND", "gnd1:GND", "black", [ "h19.2", "v38" ] ]
+  ],
+  "dependencies": { "chip-plotter": "github:Dlloydev/Wokwi-Chip-Plotter@1.0.0" }
+}

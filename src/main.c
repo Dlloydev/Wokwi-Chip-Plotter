@@ -5,9 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define FONT_WIDTH 8
-#define FONT_HEIGHT 8
-
 char font8x8[128][8] = {
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},   // U+0000 (nul)
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},   // U+0001
@@ -148,7 +145,7 @@ typedef struct {
 
 typedef struct {
   pin_t pin_IN;
-  uint32_t timebase_attr;
+  uint32_t sampletime_attr;
   uint32_t trigger_attr;
   buffer_t framebuffer;
   uint32_t fb_w;
@@ -156,11 +153,12 @@ typedef struct {
   uint32_t serial_h;
   uint32_t serial_x;
   uint32_t serial_y;
-  float serial_val;
-  float serial_last_val;
-  float serial_max;
-  float serial_min;
-  uint32_t serial_us;
+  float sample_val;
+  float sample_last_val;
+  float sample_max;
+  float sample_min;
+  uint32_t sample_us;
+  uint32_t capture_ms;
   uint32_t plot_h;
   uint32_t plot_x;
   uint32_t plot_px;
@@ -181,7 +179,7 @@ static void fill_plot(chip_state_t *chip);
 void chip_init(void) {
   chip_state_t *chip = malloc(sizeof(chip_state_t));
   chip->pin_IN = pin_init("IN", ANALOG);
-  chip->timebase_attr = attr_init("timebase", 1000);
+  chip->sampletime_attr = attr_init("sampletime", 100);
   chip->trigger_attr = attr_init("trigger", 1);
 
   chip->white = (rgba_t) {
@@ -194,10 +192,8 @@ void chip_init(void) {
     .r = 0xf7, .g = 0xf7, .b = 0xf7, .a = 0xff
   };
 
-  chip->serial_max = 0.0;
-  chip->serial_min = 5.0;
-  chip->serial_us = attr_read(chip->timebase_attr);
-
+  chip->sample_max = 0.0;
+  chip->sample_min = 5.0;
   chip->serial_x = 0;
   chip->serial_y = 0;
   chip->plot_x = 0;
@@ -209,6 +205,10 @@ void chip_init(void) {
   printf("Framebuffer: width=%d, height=%d\n", chip->fb_w, chip->fb_h);
   chip->serial_h = 24;
   chip->plot_h = chip->fb_h - chip->serial_h;
+
+  chip->sample_us = attr_read(chip->sampletime_attr);
+  chip->capture_ms = ((chip->fb_w - 2) * chip->sample_us) / 1000;
+
   fill_string(chip);
   fill_plot(chip);
 
@@ -217,27 +217,31 @@ void chip_init(void) {
     .user_data = chip,
   };
   timer_t timer = timer_init(&timer_config);
-  timer_start(timer, 1000, true);
+  timer_start(timer, 100, true);
 }
 
 void chip_timer_event(void *user_data) {
   chip_state_t *chip = (chip_state_t*)user_data;
+  chip->sample_val = pin_adc_read(chip->pin_IN);
+  if (chip->sample_val < chip->sample_min) chip->sample_min = chip->sample_val;
+  if (chip->sample_val > chip->sample_max) chip->sample_max = chip->sample_val;
 
-  if (chip->serial_us != attr_read(chip->timebase_attr)) {
-    chip->serial_us = attr_read(chip->timebase_attr);
-    timer_start((timer_t)0, chip->serial_us, true);
-  }
-  chip->serial_val = pin_adc_read(chip->pin_IN);
-  if (chip->serial_val < chip->serial_min) chip->serial_min = chip->serial_val;
-  if (chip->serial_val > chip->serial_max) chip->serial_max = chip->serial_val;
-
-  if (attr_read(chip->trigger_attr)) {
+  if (attr_read(chip->trigger_attr) == 2) { // falling
     if (chip->plot_x < chip->fb_w - 1) draw_plot(chip);
-    if ((chip->plot_x == chip->fb_w - 1) && (chip->serial_val > chip->serial_last_val)) draw_plot(chip);
-    chip->serial_last_val = chip->serial_val;
+    if ((chip->plot_x == chip->fb_w - 1) && (chip->sample_val < chip->sample_last_val)) draw_plot(chip);
+  } 
+   else if (attr_read(chip->trigger_attr) == 1) { // rising
+    if (chip->plot_x < chip->fb_w - 1) draw_plot(chip);
+    if ((chip->plot_x == chip->fb_w - 1) && (chip->sample_val > chip->sample_last_val)) draw_plot(chip);
   }
-  else  draw_plot(chip);
+  else  draw_plot(chip); // auto trigger = 0 (off)
+  chip->sample_last_val = chip->sample_val;
 
+  if (chip->sample_us != attr_read(chip->sampletime_attr)) {
+    chip->sample_us = attr_read(chip->sampletime_attr);
+    chip->capture_ms = ((chip->fb_w - 2) * chip->sample_us) / 1000;
+    timer_start((timer_t)0, chip->sample_us, true);
+  }
   if (chip->timer_count == 0) draw_string(chip);
   chip->timer_count++;
 }
@@ -245,8 +249,8 @@ void chip_timer_event(void *user_data) {
 void draw_string(chip_state_t *chip) {
   char serial_a[32];
   char serial_b[32];
-  snprintf (serial_a, 32, "%1.3f Vmax            ", chip->serial_max);
-  snprintf (serial_b, 32, "%1.3f Vmin  %d us     ", chip->serial_min, chip->serial_us);
+  snprintf (serial_a, 32, "%1.3f Vmax  %5d ^us^   ", chip->sample_max, chip->sample_us);
+  snprintf (serial_b, 32, "%1.3f Vmin  %5d <ms>   ", chip->sample_min, chip->capture_ms);
   rgba_t color;
   int ascii, yy;
   chip->serial_y = chip->fb_h - chip->serial_h + 2;
@@ -255,8 +259,8 @@ void draw_string(chip_state_t *chip) {
     ascii = (c < 25) ? serial_a[c % 25] : serial_b[c % 25];
     yy =  (c < 25) ? 1 : 12;
     char *bitmap = font8x8[ascii];
-    for (int y = 0; y < FONT_HEIGHT; y++) {
-      for (int x = 0; x < FONT_WIDTH; x++) {
+    for (int y = 0; y < 8; y++) {
+      for (int x = 0; x < 8; x++) {
         color = (bitmap[y] & (1 << x)) ? chip->white : chip->green;
         buffer_write(chip->framebuffer, (chip->fb_w * 4 * (y + yy + chip->serial_y)) + ((x + 20 + chip->serial_x) * 4), &color, sizeof(color));
       }
@@ -266,11 +270,11 @@ void draw_string(chip_state_t *chip) {
 
 void draw_plot(chip_state_t *chip) {
   rgba_t color;
-  chip->plot_y = (uint32_t)((chip->plot_h - 3) - (chip->serial_val / 5.0 * (chip->plot_h - 5)));
+  chip->plot_y = (uint32_t)((chip->plot_h - 3) - (chip->sample_val / 5.0 * (chip->plot_h - 5)));
   for (int y = 0; y < chip->plot_h; y += 1) {
     color = ((y < chip->plot_y && y < chip->plot_py) ||
              (y > chip->plot_y && y > chip->plot_py) ||
-             (chip->plot_x == 255) ||
+             (chip->plot_x == chip->fb_w - 1) ||
              (chip->plot_x == 0)) ? chip->background : chip->green;
     buffer_write(chip->framebuffer, (chip->fb_w * 4 * y) + (chip->plot_x * 4), &color, sizeof(color));
   }

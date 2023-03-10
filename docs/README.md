@@ -4,17 +4,17 @@
 
 Debug Analog or Digital Signals.
 
-- Plotter Timebase range is 50-10000 µs (default 1000 µs). This is the sample period.
--  Width of plot is 255 samples.
-- Auto Trigger ON/OFF control (default 1, ON)
+- Plotter `Sample Time` range is 50-10000 µs (default 100 µs).
+-  Width of plot is 250 samples.
+- `Trigger` modes are Off (`0`) Rising (default) ⬆ and Falling ⬇
+- Displays peak volts`Vmax`, and minimum volts `Vmin`
+- Displays  Sample Time `^us^` and Capture Time `<ms>`
 
 
 
-![image](https://user-images.githubusercontent.com/63488701/224138800-74a2f6d3-1c6b-4c27-85c0-85e226733559.png)
+![image](https://user-images.githubusercontent.com/63488701/224412373-3bae0364-6507-4d62-bd5a-6e0dd84edd14.png)
 
-
-
-![image](https://user-images.githubusercontent.com/63488701/224105126-e8875509-201f-4178-91db-3d396103598d.png)
+![image](https://user-images.githubusercontent.com/63488701/224366649-95fd6e82-e9d9-41fa-8d5c-f88310151e6f.png)
 
 ## Pin names
 
@@ -28,7 +28,7 @@ To use this chip in your project, include it as a dependency in your `diagram.js
 
 ```json
   "dependencies": {
-    "chip-plotter": "github:Dlloydev/Wokwi-Chip-Plotter@1.0.3"
+    "chip-plotter": "github:Dlloydev/Wokwi-Chip-Plotter@1.0.4"
   }
 ```
 

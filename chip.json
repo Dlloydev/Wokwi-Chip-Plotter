@@ -1,6 +1,8 @@
 {
   "name": "Plotter",
   "author": "David Lloyd",
+  "license": "MIT",
+  "docs": "https://github.com/Dlloydev/Wokwi-Chip-Plotter/blob/main/docs/README.md",
   "pins": [
     "",
     "IN",
@@ -8,13 +10,13 @@
     ""
   ],
   "display": {
-    "width": 256,
+    "width": 252,
     "height": 58
   },
   "controls": [
     {
-      "id": "timebase",
-      "label": "Timebase",
+      "id": "sampletime",
+      "label": "Sample Time",
       "type": "range",
       "min": 50,
       "max": 10000,
@@ -22,10 +24,10 @@
     },
     {
       "id": "trigger",
-      "label": "Auto Trigger",
+      "label": "Trigger ⭘ ⬆ ⬇",
       "type": "range",
       "min": 0,
-      "max": 1,
+      "max": 2,
       "step": 1
     }
   ]

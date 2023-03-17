@@ -1,6 +1,16 @@
-# Wokwi-Chip-Plotter
+# Wokwi-Chip-Plotter (depreciated)
 
-## Description
+The capabilities of this chip (and more) are now part of the new Scope chip, therefore this repository is now marked as archived and read-only. 
+
+### [Wokwi-Chip-Scope](https://github.com/Dlloydev/Wokwi-Chip-Scope)
+
+
+
+---
+
+
+
+### Description
 
 Debug Analog or Digital Signals.
 
